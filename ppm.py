@@ -39,22 +39,24 @@ class PPM:
         self.store = VarStore()
 
 
-    def add_gate(self, gate, position):
+    def add_gate(self, gate, position, simple=False):
         if gate == 'T':
             (x, y) = self.outputs[position].p
             (x, y) = self.extend(position, x, y)
             a = self.store.create_var()
             b = self.store.create_var()
             c = self.store.create_var()
-            d = self.store.create_var()
+            if not simple:
+                d = self.store.create_var()
             e = self.store.create_var()
             self.measurements[x].append(Measurement((x, y), a, '0'))
             self.edges.append(Edge((x, y), (x + 1, y), False))
             self.measurements[x + 1].append(Measurement((x + 1, y), b, '1'))
             self.edges.append(Edge((x, y), (x, y + 1), True))
             self.measurements[x].append(Measurement((x, y + 1), c, '0'))
-            self.edges.append(Edge((x, y + 1), (x + 1, y + 1), True))
-            self.measurements[x + 1].append(Measurement((x + 1, y + 1), d, '0'))
+            if not simple:
+                self.edges.append(Edge((x, y + 1), (x + 1, y + 1), True))
+                self.measurements[x + 1].append(Measurement((x + 1, y + 1), d, '0'))
             self.edges.append(Edge((x, y + 1), (x, y + 2), True))
             self.edges.append(Edge((x, y + 2), (x + 1, y + 2), True))
             self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, f"{b} + {x}"))
@@ -62,59 +64,78 @@ class PPM:
             self.outputs[position].p = (x, y + 2)
             z_error = self.outputs[position].z_error
             x_error = self.outputs[position].x_error
-            self.outputs[position].z_error = f"{a} + {c} + {d} + {e} + {x_error} + ({b} + {z_error})({c} + {d} + {z_error} + 1)"
-            self.outputs[position].x_error = f"{c} + {d} + {z_error} + 1"
+
+            if simple:
+                self.outputs[position].z_error = f"{a} + {c} + {e} + {x_error} + ({b} + {z_error})({c} + {z_error} + 1)"
+                self.outputs[position].x_error = f"{c} + {z_error} + 1"
+            else:
+                self.outputs[position].z_error = f"{a} + {c} + {d} + {e} + {x_error} + ({b} + {z_error})({c} + {d} + {z_error} + 1)"
+                self.outputs[position].x_error = f"{c} + {d} + {z_error} + 1"
 
         elif gate == 'S':
             (x, y) = self.outputs[position].p
             (x, y) = self.extend(position, x, y)
-            a = self.store.create_var()
-            b = self.store.create_var()
-            c = self.store.create_var()
-            d = self.store.create_var()
-            e = self.store.create_var()
+            if simple:
+                a = self.store.create_var()
+                self.measurements[x + 1].append(Measurement((x + 1, y), a, '0'))
+                self.edges.append(Edge((x, y), (x + 1, y), True))
+                self.outputs[position].z_error += f" + {a}"
+            else:
+                a = self.store.create_var()
+                b = self.store.create_var()
+                c = self.store.create_var()
+                d = self.store.create_var()
+                e = self.store.create_var()
 
-            self.measurements[x].append(Measurement((x, y), a, '0'))
-            self.edges.append(Edge((x, y), (x + 1, y), False))
-            self.measurements[x + 1].append(Measurement((x + 1, y), b, '0'))
-            self.edges.append(Edge((x, y), (x, y + 1), True))
-            self.measurements[x].append(Measurement((x, y + 1), c, '0'))
-            self.edges.append(Edge((x, y + 1), (x + 1, y + 1), True))
-            self.measurements[x + 1].append(Measurement((x + 1, y + 1), d, '0'))
-            self.edges.append(Edge((x, y + 1), (x, y + 2), True))
-            self.edges.append(Edge((x, y + 2), (x + 1, y + 2), True))
-            self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "1"))
+                self.measurements[x].append(Measurement((x, y), a, '0'))
+                self.edges.append(Edge((x, y), (x + 1, y), False))
+                self.measurements[x + 1].append(Measurement((x + 1, y), b, '0'))
+                self.edges.append(Edge((x, y), (x, y + 1), True))
+                self.measurements[x].append(Measurement((x, y + 1), c, '0'))
+                self.edges.append(Edge((x, y + 1), (x + 1, y + 1), True))
+                self.measurements[x + 1].append(Measurement((x + 1, y + 1), d, '0'))
+                self.edges.append(Edge((x, y + 1), (x, y + 2), True))
+                self.edges.append(Edge((x, y + 2), (x + 1, y + 2), True))
+                self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "1"))
 
-            self.outputs[position].p = (x, y + 2)
-            z_error = self.outputs[position].z_error
-            x_error = self.outputs[position].x_error
-            self.outputs[position].z_error = f"{a} + {b} + {e} + {x_error} + {z_error} + 1"
-            self.outputs[position].x_error = f"{c} + {d} + {x_error} + 1"
+                self.outputs[position].p = (x, y + 2)
+                z_error = self.outputs[position].z_error
+                x_error = self.outputs[position].x_error
+                self.outputs[position].z_error = f"{a} + {b} + {e} + {x_error} + {z_error} + 1"
+                self.outputs[position].x_error = f"{c} + {d} + {x_error} + 1"
         elif gate == 'H':
             (x, y) = self.outputs[position].p
             (x, y) = self.extend(position, x, y)
             a = self.store.create_var()
-            b = self.store.create_var()
             c = self.store.create_var()
             d = self.store.create_var()
-            e = self.store.create_var()
+
+            if not simple:
+                b = self.store.create_var()
+                e = self.store.create_var()
 
             self.measurements[x].append(Measurement((x, y), a, '0'))
-            self.edges.append(Edge((x, y), (x + 1, y), False))
-            self.measurements[x + 1].append(Measurement((x + 1, y), b, '0'))
             self.edges.append(Edge((x, y), (x, y + 1), True))
             self.measurements[x].append(Measurement((x, y + 1), c, '0'))
             self.edges.append(Edge((x, y + 1), (x + 1, y + 1), True))
             self.measurements[x + 1].append(Measurement((x + 1, y + 1), d, '1'))
             self.edges.append(Edge((x, y + 1), (x, y + 2), True))
-            self.edges.append(Edge((x, y + 2), (x + 1, y + 2), True))
-            self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "0"))
+
+            if not simple:
+                self.edges.append(Edge((x, y), (x + 1, y), False))
+                self.measurements[x + 1].append(Measurement((x + 1, y), b, '0'))
+                self.edges.append(Edge((x, y + 2), (x + 1, y + 2), True))
+                self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "0"))
 
             self.outputs[position].p = (x, y + 2)
             z_error = self.outputs[position].z_error
             x_error = self.outputs[position].x_error
-            self.outputs[position].z_error = f"{c} + {d} + {e} + {x_error} + 1"
-            self.outputs[position].x_error = f"{a} + {b} + {c} + {d} + {z_error} + 1"
+            if simple:
+                self.outputs[position].z_error = f"{c} + {d} + {x_error} + 1"
+                self.outputs[position].x_error = f"{a} + {c} + {d} + {z_error} + 1"
+            else:
+                self.outputs[position].z_error = f"{c} + {d} + {e} + {x_error} + 1"
+                self.outputs[position].x_error = f"{a} + {b} + {c} + {d} + {z_error} + 1"
         elif gate == 'HSH':
             (x, y) = self.outputs[position].p
             a = self.store.create_var()
@@ -130,14 +151,15 @@ class PPM:
             (x1, y1) = self.outputs[p1].p
             (x1, y1) = self.extend(p1, x1, y1)
             ((x1, y1), (x2, y2)) = self.match_head(p1, p2)
-            a = self.store.create_var()
             b = self.store.create_var()
             self.measurements[x1 + 1].append(Measurement((x1 + 1, y1), b, '1'))
-            self.measurements[x1 + 1].append(Measurement((x1 + 1, y1 + 1), a, '0'))
-
             self.edges.append(Edge((x1, y1), (x1 + 1, y1), True))
-            self.edges.append(Edge((x1 + 1, y1), (x1 + 1, y1 + 1), True))
             self.edges.append(Edge((x1 + 1, y1), (x2, y2), True))
+
+            if not simple:
+                a = self.store.create_var()
+                self.measurements[x1 + 1].append(Measurement((x1 + 1, y1 + 1), a, '0'))
+                self.edges.append(Edge((x1 + 1, y1), (x1 + 1, y1 + 1), True))
 
             z1_error = self.outputs[p1].z_error
             x1_error = self.outputs[p1].x_error
@@ -218,7 +240,7 @@ class PPM:
     def draw(self, filename):
         width = (2 * self.bits - 1)
         measurements_flat = [m for ms in self.measurements for m in ms]
-        height = max([m.p[1] for m in measurements_flat])
+        height = max([m.p[1] for m in measurements_flat] + [o.p[1] for o in self.outputs])
 
         margin = 0.5
         plt.figure(figsize = (width + margin * 2, height + margin * 2))
