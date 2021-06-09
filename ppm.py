@@ -37,10 +37,12 @@ class PPM:
         self.measurements = [[] for _ in range(bits * 2)]
         self.edges = []
         self.store = VarStore()
+        self.tcount = 0
 
 
     def add_gate(self, gate, position, simple=False):
         if gate == 'T':
+            self.tcount += 1
             (x, y) = self.outputs[position].p
             (x, y) = self.extend(position, x, y)
             a = self.store.create_var()
@@ -62,15 +64,15 @@ class PPM:
             self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, f"{b} + {x}"))
 
             self.outputs[position].p = (x, y + 2)
-            z_error = self.outputs[position].z_error
-            x_error = self.outputs[position].x_error
+            #z_error = self.outputs[position].z_error
+            #x_error = self.outputs[position].x_error
 
-            if simple:
-                self.outputs[position].z_error = f"{a} + {c} + {e} + {x_error} + ({b} + {z_error})({c} + {z_error} + 1)"
-                self.outputs[position].x_error = f"{c} + {z_error} + 1"
-            else:
-                self.outputs[position].z_error = f"{a} + {c} + {d} + {e} + {x_error} + ({b} + {z_error})({c} + {d} + {z_error} + 1)"
-                self.outputs[position].x_error = f"{c} + {d} + {z_error} + 1"
+            #if simple:
+            #    self.outputs[position].z_error = f"{a} + {c} + {e} + {x_error} + ({b} + {z_error})({c} + {z_error} + 1)"
+            #    self.outputs[position].x_error = f"{c} + {z_error} + 1"
+            #else:
+            #    self.outputs[position].z_error = f"{a} + {c} + {d} + {e} + {x_error} + ({b} + {z_error})({c} + {d} + {z_error} + 1)"
+            #    self.outputs[position].x_error = f"{c} + {d} + {z_error} + 1"
 
         elif gate == 'S':
             (x, y) = self.outputs[position].p
@@ -99,10 +101,10 @@ class PPM:
                 self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "1"))
 
                 self.outputs[position].p = (x, y + 2)
-                z_error = self.outputs[position].z_error
-                x_error = self.outputs[position].x_error
-                self.outputs[position].z_error = f"{a} + {b} + {e} + {x_error} + {z_error} + 1"
-                self.outputs[position].x_error = f"{c} + {d} + {x_error} + 1"
+                #z_error = self.outputs[position].z_error
+                #x_error = self.outputs[position].x_error
+                #self.outputs[position].z_error = f"{a} + {b} + {e} + {x_error} + {z_error} + 1"
+                #self.outputs[position].x_error = f"{c} + {d} + {x_error} + 1"
         elif gate == 'H':
             (x, y) = self.outputs[position].p
             (x, y) = self.extend(position, x, y)
@@ -128,24 +130,24 @@ class PPM:
                 self.measurements[x + 1].append(Measurement((x + 1, y + 2), e, "0"))
 
             self.outputs[position].p = (x, y + 2)
-            z_error = self.outputs[position].z_error
-            x_error = self.outputs[position].x_error
-            if simple:
-                self.outputs[position].z_error = f"{c} + {d} + {x_error} + 1"
-                self.outputs[position].x_error = f"{a} + {c} + {d} + {z_error} + 1"
-            else:
-                self.outputs[position].z_error = f"{c} + {d} + {e} + {x_error} + 1"
-                self.outputs[position].x_error = f"{a} + {b} + {c} + {d} + {z_error} + 1"
+            #z_error = self.outputs[position].z_error
+            #x_error = self.outputs[position].x_error
+            #if simple:
+            #    self.outputs[position].z_error = f"{c} + {d} + {x_error} + 1"
+            #    self.outputs[position].x_error = f"{a} + {c} + {d} + {z_error} + 1"
+            #else:
+            #    self.outputs[position].z_error = f"{c} + {d} + {e} + {x_error} + 1"
+            #    self.outputs[position].x_error = f"{a} + {b} + {c} + {d} + {z_error} + 1"
         elif gate == 'HSH':
             (x, y) = self.outputs[position].p
             a = self.store.create_var()
             self.measurements[x].append(Measurement((x, y), a, '0'))
             self.edges.append(Edge((x, y), (x, y + 1), True))
             self.outputs[position].p = (x, y + 1)
-            z_error = self.outputs[position].z_error
-            x_error = self.outputs[position].x_error
-            self.outputs[position].z_error = f"{z_error} + {a}"
-            self.outputs[position].x_error = f"{z_error} + {a} + {x_error} + 1"
+            #z_error = self.outputs[position].z_error
+            #x_error = self.outputs[position].x_error
+            #self.outputs[position].z_error = f"{z_error} + {a}"
+            #self.outputs[position].x_error = f"{z_error} + {a} + {x_error} + 1"
         elif gate == 'Split':
             (p1, p2) = position
             (x1, y1) = self.outputs[p1].p
@@ -161,13 +163,13 @@ class PPM:
                 self.measurements[x1 + 1].append(Measurement((x1 + 1, y1 + 1), a, '0'))
                 self.edges.append(Edge((x1 + 1, y1), (x1 + 1, y1 + 1), True))
 
-            z1_error = self.outputs[p1].z_error
-            x1_error = self.outputs[p1].x_error
-            z2_error = self.outputs[p2].z_error
-            x2_error = self.outputs[p2].x_error
+            #z1_error = self.outputs[p1].z_error
+            #x1_error = self.outputs[p1].x_error
+            #z2_error = self.outputs[p2].z_error
+            #x2_error = self.outputs[p2].x_error
 
-            self.outputs[p1].z_error = f"{z1_error} + {x1_error} + {b}"
-            self.outputs[p2].z_error = f"{z2_error} + {x2_error} + {b}"
+            #self.outputs[p1].z_error = f"{z1_error} + {x1_error} + {b}"
+            #self.outputs[p2].z_error = f"{z2_error} + {x2_error} + {b}"
 
         elif gate == 'CZ':
             (p1, p2) = position
@@ -183,13 +185,16 @@ class PPM:
             self.edges.append(Edge((x1 + 1, y1), (x1 + 1, y1 + 1), True))
             self.edges.append(Edge((x1 + 1, y1), (x2, y2), True))
 
-            z1_error = self.outputs[p1].z_error
-            x1_error = self.outputs[p1].x_error
-            z2_error = self.outputs[p2].z_error
-            x2_error = self.outputs[p2].x_error
+            #z1_error = self.outputs[p1].z_error
+            #x1_error = self.outputs[p1].x_error
+            #z2_error = self.outputs[p2].z_error
+            #x2_error = self.outputs[p2].x_error
 
-            self.outputs[p1].z_error = f"{z1_error} + {x2_error} + {a} + {b} + 1"
-            self.outputs[p2].z_error = f"{z2_error} + {x1_error} + {a} + {b} + 1"
+            #self.outputs[p1].z_error = f"{z1_error} + {x2_error} + {a} + {b} + 1"
+            #self.outputs[p2].z_error = f"{z2_error} + {x1_error} + {a} + {b} + 1"
+        elif gate == 'NEGZ':
+            pass
+            #self.outputs[position].z_error = f"~{self.outputs[position].z_error}"
 
     def match_head(self, p1, p2):
         (x1, y1) = self.outputs[p1].p
@@ -234,8 +239,24 @@ class PPM:
         self.outputs[position].z_error += f" + {a} + {b}"
         self.outputs[position].x_error = f" + {b} + 1"
 
+    def height(self):
+        measurements_flat = [m for ms in self.measurements for m in ms]
+        return max([m.p[1] for m in measurements_flat] + [o.p[1] for o in self.outputs])
+
+    def qubits(self):
+        measurements_flat = [m for ms in self.measurements for m in ms]
+        return len(measurements_flat) + len(self.outputs)
+
+    def long_edges(self):
+        result = 0
+        for e in self.edges:
+            if abs(e.p1[0] - e.p2[0]) > 1 or abs(e.p1[1] - e.p2[1]) > 1:
+                result += 1
+        return result
+
     def stats(self):
-        pass
+        edges = len(self.edges)
+        return f"Height: {self.height()}, Qubits: {self.qubits()}, Edges: {edges}, Long Edges: {self.long_edges()}, TCount: {self.tcount}"
 
     def draw(self, filename):
         width = (2 * self.bits - 1)
@@ -271,7 +292,7 @@ class PPM:
 
         points_x = [m.p[0] for m in measurements_flat] + [o.p[0] for o in self.outputs]
         points_y = [m.p[1] for m in measurements_flat] + [o.p[1] for o in self.outputs]
-        measurement_pattern = [f"{m.var} <- {m.basis}" for m in measurements_flat]
+        measurement_pattern = [f"{m.var} <- ?" for m in measurements_flat]
         plt.scatter(points_x, points_y, s=100)
         for i in range(len(measurements_flat)):
             plt.text(points_x[i], points_y[i], measurement_pattern[i])
